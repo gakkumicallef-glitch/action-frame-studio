@@ -4,18 +4,18 @@ import { useMemo, useState } from "react";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Lightbox } from "@/components/Lightbox";
-import { usePhotos } from "@/lib/photos";
+import { useAlbums, usePhotos } from "@/lib/photos";
 
 export const Route = createFileRoute("/portfolio")({
   head: () => ({
     meta: [
-      { title: "Portfolio — VersaSport Photography" },
+      { title: "Portfolio — Mvassallophotography" },
       {
         name: "description",
         content:
           "Sports photography galleries by category: football, basketball, track, combat sports and athletics.",
       },
-      { property: "og:title", content: "Portfolio — VersaSport Photography" },
+      { property: "og:title", content: "Portfolio — Mvassallophotography" },
       {
         property: "og:description",
         content: "Browse action sports galleries by category.",
@@ -26,8 +26,12 @@ export const Route = createFileRoute("/portfolio")({
 });
 
 function Portfolio() {
-  const { data: photos } = usePhotos();
+  const { data, isLoading } = usePhotos();
+  const { data: albumData } = useAlbums();
+  const photos = useMemo(() => data ?? [], [data]);
+  const albums = useMemo(() => albumData ?? [], [albumData]);
   const [filter, setFilter] = useState("All");
+  const [album, setAlbum] = useState<string>("all");
   const [open, setOpen] = useState<number | null>(null);
 
   const categories = useMemo(
@@ -35,9 +39,13 @@ function Portfolio() {
     [photos],
   );
   const visible = useMemo(
-    () => (filter === "All" ? photos : photos.filter((p) => p.category === filter)),
-    [photos, filter],
+    () =>
+      photos
+        .filter((p) => (filter === "All" ? true : p.category === filter))
+        .filter((p) => (album === "all" ? true : p.album_id === album)),
+    [photos, filter, album],
   );
+  const activeAlbum = albums.find((a) => a.id === album);
 
   return (
     <div className="min-h-screen">
@@ -50,7 +58,28 @@ function Portfolio() {
           the arrow keys to move through the set.
         </p>
 
-        <div className="mt-10 flex flex-wrap gap-2">
+        {albums.length > 0 && (
+          <div className="mt-10 flex flex-wrap gap-2">
+            {[{ id: "all", name: "All albums", caption: "" }, ...albums].map((a) => (
+              <button
+                key={a.id}
+                onClick={() => setAlbum(a.id)}
+                className={`border px-4 py-2 text-[0.65rem] uppercase tracking-[0.25em] transition-colors ${
+                  album === a.id
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border text-muted-foreground hover:border-primary hover:text-primary"
+                }`}
+              >
+                {a.name}
+              </button>
+            ))}
+          </div>
+        )}
+        {activeAlbum?.caption && (
+          <p className="mt-4 text-sm text-muted-foreground">{activeAlbum.caption}</p>
+        )}
+
+        <div className="mt-6 flex flex-wrap gap-2">
           {categories.map((c) => (
             <button
               key={c}
@@ -66,6 +95,13 @@ function Portfolio() {
           ))}
         </div>
 
+        {isLoading ? (
+          <div className="mt-10 columns-1 gap-4 sm:columns-2 lg:columns-3 [&>*]:mb-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-64 w-full animate-pulse break-inside-avoid bg-card" />
+            ))}
+          </div>
+        ) : (
         <div className="mt-10 columns-1 gap-4 sm:columns-2 lg:columns-3 [&>*]:mb-4">
           {visible.map((photo, i) => (
             <button
@@ -89,8 +125,9 @@ function Portfolio() {
             </button>
           ))}
         </div>
+        )}
 
-        {visible.length === 0 && (
+        {!isLoading && visible.length === 0 && (
           <p className="mt-16 text-sm text-muted-foreground">No images in this category yet.</p>
         )}
       </main>

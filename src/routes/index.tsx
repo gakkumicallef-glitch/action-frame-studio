@@ -4,18 +4,19 @@ import { ArrowRight } from "lucide-react";
 
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
-import { HERO_IMAGES } from "@/lib/photos";
+import { useHeroImages } from "@/lib/photos";
+import banner from "@/assets/mvassallo-banner.jpg.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "VersaSport Photography — Action Sports Photographer" },
+      { title: "Mvassallophotography — Action Sports Photographer" },
       {
         name: "description",
         content:
           "High-energy sports photography: football, athletics, combat sports and more. Explore the galleries.",
       },
-      { property: "og:title", content: "VersaSport Photography" },
+      { property: "og:title", content: "Mvassallophotography" },
       {
         property: "og:description",
         content: "High-energy action sports photography galleries.",
@@ -26,19 +27,24 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  const { images } = useHeroImages();
   const [slide, setSlide] = useState(0);
 
   useEffect(() => {
-    const t = setInterval(() => setSlide((s) => (s + 1) % HERO_IMAGES.length), 5200);
+    setSlide(0);
+  }, [images.length]);
+
+  useEffect(() => {
+    const t = setInterval(() => setSlide((s) => (s + 1) % images.length), 5200);
     return () => clearInterval(t);
-  }, []);
+  }, [images.length]);
 
   return (
     <div className="min-h-screen">
       <SiteNav />
 
       <section className="relative h-[100svh] w-full overflow-hidden">
-        {HERO_IMAGES.map((src, i) => (
+        {images.map((src, i) => (
           <div
             key={src}
             className={`absolute inset-0 transition-opacity duration-[1400ms] ${
@@ -61,7 +67,7 @@ function Index() {
             Action · Emotion · Motion
           </p>
           <h1 className="animate-rise mt-5 max-w-4xl text-5xl leading-[0.92] sm:text-7xl lg:text-8xl">
-            VersaSport
+            Mvassallo
             <br />
             Photography
           </h1>
@@ -80,7 +86,7 @@ function Index() {
           </div>
 
           <div className="mt-12 flex gap-2">
-            {HERO_IMAGES.map((src, i) => (
+            {images.map((src, i) => (
               <button
                 key={src}
                 aria-label={`Show slide ${i + 1}`}
@@ -92,6 +98,15 @@ function Index() {
             ))}
           </div>
         </div>
+      </section>
+
+      <section className="border-y border-border/40">
+        <img
+          src={banner.url}
+          alt="Mvassallophotography — collage of matchday football photographs"
+          loading="lazy"
+          className="w-full object-cover"
+        />
       </section>
 
       <SiteFooter />
