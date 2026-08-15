@@ -141,7 +141,7 @@ async function signedFetch(method: string, path: string, body: string, query = '
       'x-amz-content-sha256': payloadHash,
       'content-type': 'application/xml',
     },
-    body: body || undefined,
+    body: body ? body : null,
   });
 }
 
