@@ -41,3 +41,19 @@ export const signPhotoUrls = createServerFn({ method: 'POST' })
     );
     return Object.fromEntries(entries) as Record<string, string>;
   });
+
+/** Admin-only: delete a stored object from R2. */
+export const deletePhotoObject = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ key: z.string().min(1) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin, error } = await context.supabase.rpc('has_role', {
+      _user_id: context.userId,
+      _role: 'admin',
+    });
+    if (error || !isAdmin) throw new Error('Forbidden');
+    const { presignR2 } = await import('./r2.server');
+    const url = await presignR2('GET', data.key, 300);
+    const res = await fetch(url.replace('X-Amz-SignedHeaders', 'X-Amz-SignedHeaders'), { method: 'DELETE' });
+    return { ok: res.ok };
+  });
