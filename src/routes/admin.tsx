@@ -66,9 +66,13 @@ function SignIn() {
             options: { emailRedirectTo: `${window.location.origin}/admin` },
           });
     setBusy(false);
-    if (res.error) return toast.error(res.error.message);
-    if (mode === "up" && !res.data.session)
+    if (res.error) {
+      toast.error(res.error.message);
+      return;
+    }
+    if (mode === "up" && !res.data.session) {
       toast.success("Check your email to confirm the account.");
+    }
   }
 
   return (
@@ -169,7 +173,10 @@ function Manager() {
 
   async function update(id: string, patch: Partial<Photo>) {
     const { error } = await supabase.from("photos").update(patch).eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     await refresh();
   }
 
@@ -187,7 +194,10 @@ function Manager() {
     if (photo.storage_path)
       await supabase.storage.from("photos").remove([photo.storage_path]);
     const { error } = await supabase.from("photos").delete().eq("id", photo.id);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Image deleted");
     await refresh();
   }
