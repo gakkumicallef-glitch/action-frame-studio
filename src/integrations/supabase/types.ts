@@ -14,13 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      albums: {
+        Row: {
+          caption: string
+          created_at: string
+          id: string
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          caption?: string
+          created_at?: string
+          id?: string
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          caption?: string
+          created_at?: string
+          id?: string
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       photos: {
         Row: {
+          album_id: string | null
           category: string
           created_at: string
           height: number | null
           id: string
           image_url: string
+          is_hero: boolean
           sort_order: number
           storage_path: string | null
           tags: string[]
@@ -28,11 +57,13 @@ export type Database = {
           width: number | null
         }
         Insert: {
+          album_id?: string | null
           category?: string
           created_at?: string
           height?: number | null
           id?: string
           image_url: string
+          is_hero?: boolean
           sort_order?: number
           storage_path?: string | null
           tags?: string[]
@@ -40,18 +71,28 @@ export type Database = {
           width?: number | null
         }
         Update: {
+          album_id?: string | null
           category?: string
           created_at?: string
           height?: number | null
           id?: string
           image_url?: string
+          is_hero?: boolean
           sort_order?: number
           storage_path?: string | null
           tags?: string[]
           title?: string
           width?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "photos_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "albums"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
