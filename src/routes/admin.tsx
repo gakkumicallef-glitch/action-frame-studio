@@ -8,7 +8,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { supabase } from "@/integrations/supabase/client";
 import { compressImage } from "@/lib/compress";
 import { CATEGORIES, fetchPhotos, type Photo } from "@/lib/photos";
-import { presignPhotoUpload } from "@/lib/r2.functions";
+import { deletePhotoObject, presignPhotoUpload } from "@/lib/r2.functions";
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
@@ -196,8 +196,13 @@ function Manager() {
   }
 
   async function remove(photo: Photo) {
-    if (photo.storage_path)
-      await supabase.storage.from("photos").remove([photo.storage_path]);
+    if (photo.storage_path) {
+      try {
+        await deletePhotoObject({ data: { key: photo.storage_path } });
+      } catch {
+        /* metadata removal still proceeds */
+      }
+    }
     const { error } = await supabase.from("photos").delete().eq("id", photo.id);
     if (error) {
       toast.error(error.message);
