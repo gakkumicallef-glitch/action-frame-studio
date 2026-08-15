@@ -27,6 +27,15 @@ export type Photo = {
   image_url: string;
   storage_path: string | null;
   sort_order: number;
+  album_id: string | null;
+  is_hero: boolean;
+};
+
+export type Album = {
+  id: string;
+  name: string;
+  caption: string;
+  sort_order: number;
 };
 
 const seed = (
@@ -43,6 +52,8 @@ const seed = (
   image_url: url,
   storage_path: null,
   sort_order: order,
+  album_id: null,
+  is_hero: true,
 });
 
 export const DEFAULT_PHOTOS: Photo[] = [
@@ -58,10 +69,13 @@ export const DEFAULT_PHOTOS: Photo[] = [
 
 export const HERO_IMAGES = [a3.url, a2.url, a8.url, a6.url, a1.url];
 
+const SELECT =
+  "id, title, category, tags, image_url, storage_path, sort_order, album_id, is_hero";
+
 export async function fetchPhotos(): Promise<Photo[]> {
   const { data, error } = await supabase
     .from("photos")
-    .select("id, title, category, tags, image_url, storage_path, sort_order")
+    .select(SELECT)
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: false });
 
@@ -91,6 +105,26 @@ export function usePhotos() {
   return useQuery({
     queryKey: ["photos"],
     queryFn: fetchPhotos,
-    initialData: DEFAULT_PHOTOS,
   });
+}
+
+export async function fetchAlbums(): Promise<Album[]> {
+  const { data, error } = await supabase
+    .from("albums")
+    .select("id, name, caption, sort_order")
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as Album[];
+}
+
+export function useAlbums() {
+  return useQuery({ queryKey: ["albums"], queryFn: fetchAlbums });
+}
+
+export function useHeroImages() {
+  const { data, isLoading } = usePhotos();
+  const heroes = (data ?? []).filter((p) => p.is_hero && p.image_url);
+  const images = heroes.length > 0 ? heroes.map((p) => p.image_url) : HERO_IMAGES;
+  return { images, isLoading };
 }
