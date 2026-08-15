@@ -8,6 +8,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { supabase } from "@/integrations/supabase/client";
 import { compressImage } from "@/lib/compress";
 import { CATEGORIES, fetchPhotos, type Photo } from "@/lib/photos";
+import { presignPhotoUpload } from "@/lib/r2.functions";
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
@@ -148,16 +149,20 @@ function Manager() {
     for (const file of Array.from(files)) {
       try {
         const compressed = await compressImage(file);
-        const path = `${crypto.randomUUID()}.jpg`;
-        const { error: upErr } = await supabase.storage
-          .from("photos")
-          .upload(path, compressed, { contentType: "image/jpeg" });
-        if (upErr) throw upErr;
+        const { key, uploadUrl } = await presignPhotoUpload({
+          data: { fileName: compressed.name, contentType: compressed.type || "image/jpeg" },
+        });
+        const res = await fetch(uploadUrl, {
+          method: "PUT",
+          headers: { "content-type": compressed.type || "image/jpeg" },
+          body: compressed,
+        });
+        if (!res.ok) throw new Error(`Upload failed (${res.status})`);
         const { error: dbErr } = await supabase.from("photos").insert({
           title: file.name.replace(/\.[^.]+$/, ""),
           category,
           image_url: "",
-          storage_path: path,
+          storage_path: key,
           sort_order: photos.length + ok,
         });
         if (dbErr) throw dbErr;
