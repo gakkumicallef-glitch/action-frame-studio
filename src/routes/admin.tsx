@@ -8,6 +8,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { supabase } from "@/integrations/supabase/client";
 import { compressImage } from "@/lib/compress";
 import { CATEGORIES, fetchPhotos, type Photo } from "@/lib/photos";
+import { deletePhotoObject, presignPhotoUpload } from "@/lib/r2.functions";
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
@@ -148,16 +149,39 @@ function Manager() {
     for (const file of Array.from(files)) {
       try {
         const compressed = await compressImage(file);
-        const path = `${crypto.randomUUID()}.jpg`;
-        const { error: upErr } = await supabase.storage
-          .from("photos")
-          .upload(path, compressed, { contentType: "image/jpeg" });
-        if (upErr) throw upErr;
+        const { key, uploadUrl } = await presignPhotoUpload({
+          data: { fileName: compressed.name, contentType: compressed.type || "image/jpeg" },
+        });
+        const contentType = compressed.type || "image/jpeg";
+        let uploaded = false;
+        try {
+          const res = await fetch(uploadUrl, {
+            method: "PUT",
+            headers: { "content-type": contentType },
+            body: compressed,
+          });
+          uploaded = res.ok;
+        } catch {
+          uploaded = false;
+        }
+        if (!uploaded) {
+          // Bucket has no browser CORS rule — send it through the same-origin proxy.
+          const { data: sess } = await supabase.auth.getSession();
+          const res = await fetch(`/api/r2-upload?key=${encodeURIComponent(key)}`, {
+            method: "POST",
+            headers: {
+              "content-type": contentType,
+              Authorization: `Bearer ${sess.session?.access_token ?? ""}`,
+            },
+            body: compressed,
+          });
+          if (!res.ok) throw new Error(`Upload failed (${res.status})`);
+        }
         const { error: dbErr } = await supabase.from("photos").insert({
           title: file.name.replace(/\.[^.]+$/, ""),
           category,
           image_url: "",
-          storage_path: path,
+          storage_path: key,
           sort_order: photos.length + ok,
         });
         if (dbErr) throw dbErr;
@@ -191,8 +215,13 @@ function Manager() {
   }
 
   async function remove(photo: Photo) {
-    if (photo.storage_path)
-      await supabase.storage.from("photos").remove([photo.storage_path]);
+    if (photo.storage_path) {
+      try {
+        await deletePhotoObject({ data: { key: photo.storage_path } });
+      } catch {
+        /* metadata removal still proceeds */
+      }
+    }
     const { error } = await supabase.from("photos").delete().eq("id", photo.id);
     if (error) {
       toast.error(error.message);

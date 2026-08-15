@@ -14,6 +14,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as PortfolioRouteImport } from './routes/portfolio'
+import { Route as ApiR2UploadRouteImport } from './routes/api/r2-upload'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,6 +41,11 @@ const PortfolioRoute = PortfolioRouteImport.update({
   path: '/portfolio',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiR2UploadRoute = ApiR2UploadRouteImport.update({
+  id: '/api/r2-upload',
+  path: '/api/r2-upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/contact': typeof ContactRoute
   '/portfolio': typeof PortfolioRoute
+  '/api/r2-upload': typeof ApiR2UploadRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/contact': typeof ContactRoute
   '/portfolio': typeof PortfolioRoute
+  '/api/r2-upload': typeof ApiR2UploadRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +70,22 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/contact': typeof ContactRoute
   '/portfolio': typeof PortfolioRoute
+  '/api/r2-upload': typeof ApiR2UploadRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/admin' | '/contact' | '/portfolio'
+  fullPaths:
+    '/' | '/about' | '/admin' | '/contact' | '/portfolio' | '/api/r2-upload'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/admin' | '/contact' | '/portfolio'
-  id: '__root__' | '/' | '/about' | '/admin' | '/contact' | '/portfolio'
+  to: '/' | '/about' | '/admin' | '/contact' | '/portfolio' | '/api/r2-upload'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/admin'
+    | '/contact'
+    | '/portfolio'
+    | '/api/r2-upload'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,6 +94,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   ContactRoute: typeof ContactRoute
   PortfolioRoute: typeof PortfolioRoute
+  ApiR2UploadRoute: typeof ApiR2UploadRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -116,6 +134,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortfolioRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/r2-upload': {
+      id: '/api/r2-upload'
+      path: '/api/r2-upload'
+      fullPath: '/api/r2-upload'
+      preLoaderRoute: typeof ApiR2UploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -125,6 +150,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   ContactRoute: ContactRoute,
   PortfolioRoute: PortfolioRoute,
+  ApiR2UploadRoute: ApiR2UploadRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
