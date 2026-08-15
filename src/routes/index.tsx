@@ -1,24 +1,100 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { ArrowRight } from "lucide-react";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
+import { SiteNav } from "@/components/SiteNav";
+import { SiteFooter } from "@/components/SiteFooter";
+import { HERO_IMAGES } from "@/lib/photos";
+
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "VersaSport Photography — Action Sports Photographer" },
+      {
+        name: "description",
+        content:
+          "High-energy sports photography: football, athletics, combat sports and more. Explore the galleries.",
+      },
+      { property: "og:title", content: "VersaSport Photography" },
+      {
+        property: "og:description",
+        content: "High-energy action sports photography galleries.",
+      },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
+  const [slide, setSlide] = useState(0);
+
+  useEffect(() => {
+    const t = setInterval(() => setSlide((s) => (s + 1) % HERO_IMAGES.length), 5200);
+    return () => clearInterval(t);
+  }, []);
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="min-h-screen">
+      <SiteNav />
+
+      <section className="relative h-[100svh] w-full overflow-hidden">
+        {HERO_IMAGES.map((src, i) => (
+          <div
+            key={src}
+            className={`absolute inset-0 transition-opacity duration-[1400ms] ${
+              i === slide ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            <img
+              src={src}
+              alt=""
+              aria-hidden="true"
+              loading={i === 0 ? "eager" : "lazy"}
+              className={`h-full w-full object-cover ${i === slide ? "animate-kenburns" : ""}`}
+            />
+          </div>
+        ))}
+        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/40 to-background" />
+
+        <div className="relative z-10 mx-auto flex h-full max-w-7xl flex-col justify-end px-5 pb-24">
+          <p className="animate-rise text-[0.65rem] uppercase tracking-[0.45em] text-primary">
+            Action · Emotion · Motion
+          </p>
+          <h1 className="animate-rise mt-5 max-w-4xl text-5xl leading-[0.92] sm:text-7xl lg:text-8xl">
+            VersaSport
+            <br />
+            Photography
+          </h1>
+          <p className="animate-rise mt-6 max-w-md text-sm text-muted-foreground sm:text-base">
+            Split-second frames from the pitch, the track and the ring — shot in full
+            sun, full speed, full contact.
+          </p>
+          <div className="animate-rise mt-9">
+            <Link
+              to="/portfolio"
+              className="group inline-flex items-center gap-3 border border-primary bg-primary px-7 py-3.5 text-[0.7rem] uppercase tracking-[0.3em] text-primary-foreground transition-colors hover:bg-transparent hover:text-primary"
+            >
+              View Galleries
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </div>
+
+          <div className="mt-12 flex gap-2">
+            {HERO_IMAGES.map((src, i) => (
+              <button
+                key={src}
+                aria-label={`Show slide ${i + 1}`}
+                onClick={() => setSlide(i)}
+                className={`h-[2px] w-10 transition-colors ${
+                  i === slide ? "bg-primary" : "bg-border"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <SiteFooter />
     </div>
   );
 }
