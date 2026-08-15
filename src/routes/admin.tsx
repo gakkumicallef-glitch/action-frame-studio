@@ -27,6 +27,7 @@ export const Route = createFileRoute("/admin")({
 function Admin() {
   const [userId, setUserId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
@@ -39,12 +40,51 @@ function Admin() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    let active = true;
+    if (!userId) {
+      setIsAdmin(false);
+      return;
+    }
+    supabase
+      .rpc("has_role", { _user_id: userId, _role: "admin" })
+      .then(({ data }) => {
+        if (active) setIsAdmin(data === true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [userId]);
+
   return (
     <div className="min-h-screen">
       <SiteNav />
       <main className="mx-auto max-w-5xl px-5 pb-24 pt-32">
-        {!ready ? null : userId ? <Manager /> : <SignIn />}
+        {!ready ? null : !userId ? (
+          <SignIn />
+        ) : isAdmin ? (
+          <Manager />
+        ) : (
+          <NotAuthorised />
+        )}
       </main>
+    </div>
+  );
+}
+
+function NotAuthorised() {
+  return (
+    <div className="mx-auto max-w-sm text-center">
+      <h1 className="text-3xl">Not authorised</h1>
+      <p className="mt-3 text-sm text-muted-foreground">
+        This account does not have access to the gallery manager.
+      </p>
+      <button
+        onClick={() => supabase.auth.signOut()}
+        className="mt-8 border border-border px-7 py-3.5 text-[0.65rem] uppercase tracking-[0.3em] hover:border-primary hover:text-primary"
+      >
+        Sign out
+      </button>
     </div>
   );
 }
@@ -52,27 +92,16 @@ function Admin() {
 function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [mode, setMode] = useState<"in" | "up">("in");
   const [busy, setBusy] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const res =
-      mode === "in"
-        ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signUp({
-            email,
-            password,
-            options: { emailRedirectTo: `${window.location.origin}/admin` },
-          });
+    const res = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
     if (res.error) {
       toast.error(res.error.message);
       return;
-    }
-    if (mode === "up" && !res.data.session) {
-      toast.success("Check your email to confirm the account.");
     }
   }
 
@@ -80,7 +109,7 @@ function SignIn() {
     <div className="mx-auto max-w-sm">
       <h1 className="text-3xl">Admin</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Sign in to manage the galleries.
+        Owner access only. Sign in to manage the galleries.
       </p>
       <form onSubmit={submit} className="mt-8 grid gap-4">
         <input
@@ -103,15 +132,9 @@ function SignIn() {
           disabled={busy}
           className="border border-primary bg-primary px-7 py-3.5 text-[0.7rem] uppercase tracking-[0.3em] text-primary-foreground disabled:opacity-50"
         >
-          {busy ? "Please wait…" : mode === "in" ? "Sign in" : "Create account"}
+          {busy ? "Please wait…" : "Sign in"}
         </button>
       </form>
-      <button
-        onClick={() => setMode(mode === "in" ? "up" : "in")}
-        className="mt-4 text-[0.65rem] uppercase tracking-[0.25em] text-muted-foreground hover:text-primary"
-      >
-        {mode === "in" ? "Create an account" : "I already have an account"}
-      </button>
     </div>
   );
 }
