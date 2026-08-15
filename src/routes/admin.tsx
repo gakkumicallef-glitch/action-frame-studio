@@ -152,12 +152,31 @@ function Manager() {
         const { key, uploadUrl } = await presignPhotoUpload({
           data: { fileName: compressed.name, contentType: compressed.type || "image/jpeg" },
         });
-        const res = await fetch(uploadUrl, {
-          method: "PUT",
-          headers: { "content-type": compressed.type || "image/jpeg" },
-          body: compressed,
-        });
-        if (!res.ok) throw new Error(`Upload failed (${res.status})`);
+        const contentType = compressed.type || "image/jpeg";
+        let uploaded = false;
+        try {
+          const res = await fetch(uploadUrl, {
+            method: "PUT",
+            headers: { "content-type": contentType },
+            body: compressed,
+          });
+          uploaded = res.ok;
+        } catch {
+          uploaded = false;
+        }
+        if (!uploaded) {
+          // Bucket has no browser CORS rule — send it through the same-origin proxy.
+          const { data: sess } = await supabase.auth.getSession();
+          const res = await fetch(`/api/r2-upload?key=${encodeURIComponent(key)}`, {
+            method: "POST",
+            headers: {
+              "content-type": contentType,
+              Authorization: `Bearer ${sess.session?.access_token ?? ""}`,
+            },
+            body: compressed,
+          });
+          if (!res.ok) throw new Error(`Upload failed (${res.status})`);
+        }
         const { error: dbErr } = await supabase.from("photos").insert({
           title: file.name.replace(/\.[^.]+$/, ""),
           category,
