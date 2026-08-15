@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { signPhotoUrls } from "@/lib/r2.functions";
 
 import a1 from "@/assets/shot-13-16-40.jpg.asset.json";
 import a2 from "@/assets/shot-13-16-41.jpg.asset.json";
@@ -71,10 +72,13 @@ export async function fetchPhotos(): Promise<Photo[]> {
   const paths = rows.map((r) => r.storage_path).filter(Boolean) as string[];
   if (paths.length === 0) return rows;
 
-  const { data: signed } = await supabase.storage
-    .from("photos")
-    .createSignedUrls(paths, 60 * 60 * 24 * 7);
-  const map = new Map((signed ?? []).map((s) => [s.path ?? "", s.signedUrl]));
+  let map = new Map<string, string>();
+  try {
+    const signed = await signPhotoUrls({ data: { keys: paths } });
+    map = new Map(Object.entries(signed));
+  } catch {
+    map = new Map();
+  }
 
   return rows.map((r) =>
     r.storage_path && map.get(r.storage_path)
