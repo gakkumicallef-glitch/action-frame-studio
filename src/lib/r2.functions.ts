@@ -53,7 +53,7 @@ export const deletePhotoObject = createServerFn({ method: 'POST' })
     });
     if (error || !isAdmin) throw new Error('Forbidden');
     const { presignR2 } = await import('./r2.server');
-    const url = await presignR2('GET', data.key, 300);
-    const res = await fetch(url.replace('X-Amz-SignedHeaders', 'X-Amz-SignedHeaders'), { method: 'DELETE' });
+    const url = await presignR2('DELETE', data.key, 300);
+    const res = await fetch(url, { method: 'DELETE' });
     return { ok: res.ok };
   });

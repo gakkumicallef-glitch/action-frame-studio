@@ -63,7 +63,7 @@ async function signingKey(secret: string, date: string, region: string): Promise
 
 /** Presign an S3 request against the R2 bucket and return an absolute URL. */
 export async function presignR2(
-  method: 'PUT' | 'GET',
+  method: 'PUT' | 'GET' | 'DELETE',
   key: string,
   expiresIn = 3600,
 ): Promise<string> {
