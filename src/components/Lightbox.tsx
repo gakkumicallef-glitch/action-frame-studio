@@ -32,9 +32,8 @@ export function Lightbox({ photos, index, onClose, onIndexChange }: Props) {
     <div className="fixed inset-0 z-50 flex flex-col bg-background/97 backdrop-blur-sm">
       <div className="flex items-center justify-between px-5 py-4">
         <div className="min-w-0">
-          <p className="truncate text-sm">{photo.title || "Untitled"}</p>
           <p className="text-[0.65rem] uppercase tracking-[0.25em] text-muted-foreground">
-            {photo.category} &middot; {index + 1}/{photos.length}
+            {index + 1}/{photos.length}
           </p>
         </div>
         <button aria-label="Close" onClick={onClose} className="shrink-0 p-2 hover:text-primary">
@@ -52,7 +51,7 @@ export function Lightbox({ photos, index, onClose, onIndexChange }: Props) {
         </button>
         <img
           src={photo.image_url}
-          alt={photo.title || `${photo.category} sports photograph`}
+          alt={`${photo.category} sports photograph`}
           className="max-h-full max-w-full object-contain"
         />
         <button
