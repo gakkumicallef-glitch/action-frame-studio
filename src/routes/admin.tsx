@@ -2,12 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowDown, ArrowUp, Loader2, Trash2, Upload } from "lucide-react";
+import { ArrowDown, ArrowUp, Loader2, Plus, Star, Trash2, Upload } from "lucide-react";
 
 import { SiteNav } from "@/components/SiteNav";
 import { supabase } from "@/integrations/supabase/client";
 import { compressImage } from "@/lib/compress";
-import { CATEGORIES, fetchPhotos, type Photo } from "@/lib/photos";
+import { CATEGORIES, fetchPhotos, type Album, type Photo } from "@/lib/photos";
 import { deletePhotoObject, presignPhotoUpload } from "@/lib/r2.functions";
 
 export const Route = createFileRoute("/admin")({
@@ -142,17 +142,30 @@ function SignIn() {
 function Manager() {
   const qc = useQueryClient();
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [albums, setAlbums] = useState<Album[]>([]);
   const [uploading, setUploading] = useState(false);
   const [category, setCategory] = useState<string>(CATEGORIES[0]);
+  const [albumId, setAlbumId] = useState<string>("");
+  const [newAlbum, setNewAlbum] = useState("");
+  const [newCaption, setNewCaption] = useState("");
   const [drag, setDrag] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
-    const { data } = await supabase
-      .from("photos")
-      .select("id, title, category, tags, image_url, storage_path, sort_order")
-      .order("sort_order", { ascending: true });
-    setPhotos((data ?? []) as Photo[]);
+    const [{ data: p }, { data: a }] = await Promise.all([
+      supabase
+        .from("photos")
+        .select(
+          "id, title, category, tags, image_url, storage_path, sort_order, album_id, is_hero",
+        )
+        .order("sort_order", { ascending: true }),
+      supabase
+        .from("albums")
+        .select("id, name, caption, sort_order")
+        .order("sort_order", { ascending: true }),
+    ]);
+    setPhotos((p ?? []) as Photo[]);
+    setAlbums((a ?? []) as Album[]);
   }, []);
 
   useEffect(() => {
@@ -162,8 +175,48 @@ function Manager() {
   const refresh = async () => {
     await load();
     await qc.invalidateQueries({ queryKey: ["photos"] });
+    await qc.invalidateQueries({ queryKey: ["albums"] });
     void fetchPhotos;
   };
+
+  async function createAlbum(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newAlbum.trim()) return;
+    const { error } = await supabase.from("albums").insert({
+      name: newAlbum.trim(),
+      caption: newCaption.trim(),
+      sort_order: albums.length,
+    });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setNewAlbum("");
+    setNewCaption("");
+    toast.success("Album created");
+    await refresh();
+  }
+
+  async function updateAlbum(id: string, patch: Partial<Album>) {
+    const { error } = await supabase.from("albums").update(patch).eq("id", id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    await refresh();
+  }
+
+  async function removeAlbum(album: Album) {
+    await supabase.from("photos").update({ album_id: null }).eq("album_id", album.id);
+    const { error } = await supabase.from("albums").delete().eq("id", album.id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    if (albumId === album.id) setAlbumId("");
+    toast.success("Album deleted");
+    await refresh();
+  }
 
   async function handleFiles(files: FileList | null) {
     if (!files?.length) return;
@@ -203,6 +256,7 @@ function Manager() {
         const { error: dbErr } = await supabase.from("photos").insert({
           title: file.name.replace(/\.[^.]+$/, ""),
           category,
+          album_id: albumId || null,
           image_url: "",
           storage_path: key,
           sort_order: photos.length + ok,
@@ -254,6 +308,8 @@ function Manager() {
     await refresh();
   }
 
+  const heroCount = photos.filter((p) => p.is_hero).length;
+
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -269,7 +325,74 @@ function Manager() {
         </button>
       </div>
 
-      <div className="mt-8 flex flex-wrap gap-2">
+      <section className="mt-12 border border-border bg-card p-5">
+        <h2 className="text-[0.7rem] uppercase tracking-[0.3em] text-muted-foreground">
+          Albums
+        </h2>
+        <form onSubmit={createAlbum} className="mt-4 grid gap-3 sm:grid-cols-[1fr_1.4fr_auto]">
+          <input
+            value={newAlbum}
+            onChange={(e) => setNewAlbum(e.target.value)}
+            placeholder="Album name"
+            className="min-w-0 border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+          />
+          <input
+            value={newCaption}
+            onChange={(e) => setNewCaption(e.target.value)}
+            placeholder="Caption"
+            className="min-w-0 border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+          />
+          <button className="inline-flex items-center justify-center gap-2 border border-primary bg-primary px-5 py-2 text-[0.65rem] uppercase tracking-[0.25em] text-primary-foreground">
+            <Plus className="h-4 w-4" />
+            Add
+          </button>
+        </form>
+
+        <div className="mt-5 grid gap-2">
+          {albums.map((album) => (
+            <div
+              key={album.id}
+              className="grid gap-2 border border-border p-3 sm:grid-cols-[1fr_1.4fr_auto]"
+            >
+              <input
+                defaultValue={album.name}
+                onBlur={(e) =>
+                  e.target.value.trim() &&
+                  e.target.value !== album.name &&
+                  updateAlbum(album.id, { name: e.target.value.trim() })
+                }
+                className="min-w-0 border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+              />
+              <input
+                defaultValue={album.caption}
+                onBlur={(e) =>
+                  e.target.value !== album.caption &&
+                  updateAlbum(album.id, { caption: e.target.value })
+                }
+                placeholder="Caption"
+                className="min-w-0 border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+              />
+              <button
+                aria-label={`Delete album ${album.name}`}
+                onClick={() => removeAlbum(album)}
+                className="justify-self-start p-2 text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+          {albums.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              No albums yet — create one to group your shoots.
+            </p>
+          )}
+        </div>
+      </section>
+
+      <h2 className="mt-12 text-[0.7rem] uppercase tracking-[0.3em] text-muted-foreground">
+        Upload
+      </h2>
+      <div className="mt-4 flex flex-wrap gap-2">
         {CATEGORIES.map((c) => (
           <button
             key={c}
@@ -285,6 +408,19 @@ function Manager() {
         ))}
       </div>
 
+      <select
+        value={albumId}
+        onChange={(e) => setAlbumId(e.target.value)}
+        className="mt-3 w-full border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary sm:w-72"
+      >
+        <option value="">No album</option>
+        {albums.map((a) => (
+          <option key={a.id} value={a.id}>
+            {a.name}
+          </option>
+        ))}
+      </select>
+
       <div
         onDragOver={(e) => {
           e.preventDefault();
@@ -297,7 +433,7 @@ function Manager() {
           void handleFiles(e.dataTransfer.files);
         }}
         onClick={() => inputRef.current?.click()}
-        className={`mt-6 cursor-pointer border border-dashed px-6 py-16 text-center transition-colors ${
+        className={`mt-4 cursor-pointer border border-dashed px-6 py-16 text-center transition-colors ${
           drag ? "border-primary bg-card" : "border-border"
         }`}
       >
@@ -308,6 +444,12 @@ function Manager() {
         )}
         <p className="mt-4 text-sm">
           Drop images here or click to browse — uploading to <b>{category}</b>
+          {albumId && (
+            <>
+              {" "}
+              in <b>{albums.find((a) => a.id === albumId)?.name}</b>
+            </>
+          )}
         </p>
         <p className="mt-1 text-[0.65rem] uppercase tracking-[0.2em] text-muted-foreground">
           Auto-compressed under 500 KB
@@ -322,7 +464,11 @@ function Manager() {
         />
       </div>
 
-      <div className="mt-10 grid gap-3">
+      <h2 className="mt-12 text-[0.7rem] uppercase tracking-[0.3em] text-muted-foreground">
+        Photos — {heroCount} on the front page slideshow
+      </h2>
+
+      <div className="mt-4 grid gap-3">
         {photos.map((photo, i) => (
           <div
             key={photo.id}
@@ -331,7 +477,7 @@ function Manager() {
             <span className="grid h-14 w-14 shrink-0 place-items-center bg-secondary text-[0.6rem] uppercase tracking-[0.2em] text-muted-foreground">
               {i + 1}
             </span>
-            <div className="grid min-w-0 gap-2 sm:grid-cols-3">
+            <div className="grid min-w-0 gap-2 sm:grid-cols-2">
               <input
                 defaultValue={photo.title}
                 onBlur={(e) =>
@@ -351,6 +497,18 @@ function Manager() {
                   </option>
                 ))}
               </select>
+              <select
+                value={photo.album_id ?? ""}
+                onChange={(e) => update(photo.id, { album_id: e.target.value || null })}
+                className="min-w-0 border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+              >
+                <option value="">No album</option>
+                {albums.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name}
+                  </option>
+                ))}
+              </select>
               <input
                 defaultValue={photo.tags.join(", ")}
                 onBlur={(e) =>
@@ -365,7 +523,15 @@ function Manager() {
                 className="min-w-0 border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
               />
             </div>
-            <div className="flex shrink-0 gap-1">
+            <div className="flex shrink-0 flex-wrap justify-end gap-1">
+              <button
+                aria-label={photo.is_hero ? "Remove from front page" : "Show on front page"}
+                title={photo.is_hero ? "Remove from front page" : "Show on front page"}
+                onClick={() => update(photo.id, { is_hero: !photo.is_hero })}
+                className={`p-2 ${photo.is_hero ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
+              >
+                <Star className={`h-4 w-4 ${photo.is_hero ? "fill-current" : ""}`} />
+              </button>
               <button aria-label="Move up" onClick={() => move(i, -1)} className="p-2 hover:text-primary">
                 <ArrowUp className="h-4 w-4" />
               </button>
