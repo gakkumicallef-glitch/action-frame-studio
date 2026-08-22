@@ -78,12 +78,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "VersaSport Photography" },
+      { title: "Mvassallophotography" },
       {
         name: "description",
         content: "High-energy action sports photography portfolio.",
       },
-      { property: "og:title", content: "VersaSport Photography" },
+      { property: "og:title", content: "Mvassallophotography" },
       {
         property: "og:description",
         content: "High-energy action sports photography portfolio.",
