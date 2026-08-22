@@ -14,10 +14,10 @@ export const Route = createFileRoute("/admin")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Admin — VersaSport Photography" },
+      { title: "Admin — Mvassallophotography" },
       { name: "description", content: "Private gallery management area." },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "Admin — VersaSport Photography" },
+      { property: "og:title", content: "Admin — Mvassallophotography" },
       { property: "og:description", content: "Private gallery management area." },
     ],
   }),

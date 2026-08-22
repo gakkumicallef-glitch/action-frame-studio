@@ -7,13 +7,13 @@ import { HERO_IMAGES } from "@/lib/photos";
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "About — VersaSport Photography" },
+      { title: "About — Mvassallophotography" },
       {
         name: "description",
         content:
           "Pitchside sports photographer covering football, athletics and combat sports across Malta and beyond.",
       },
-      { property: "og:title", content: "About — VersaSport Photography" },
+      { property: "og:title", content: "About — Mvassallophotography" },
       {
         property: "og:description",
         content: "Pitchside sports photographer covering football, athletics and combat sports.",
