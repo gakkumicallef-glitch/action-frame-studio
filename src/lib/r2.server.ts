@@ -66,9 +66,15 @@ export async function presignR2(
   method: 'PUT' | 'GET' | 'DELETE',
   key: string,
   expiresIn = 3600,
+  /** Align the signing timestamp to a bucket (seconds) so repeat calls return an
+   *  identical URL — lets the browser/CDN reuse its cached copy of the image. */
+  alignSec = 0,
 ): Promise<string> {
   const { host, region, accessKeyId, secretAccessKey, bucket } = cfg();
-  const now = new Date();
+  const now =
+    alignSec > 0
+      ? new Date(Math.floor(Date.now() / (alignSec * 1000)) * alignSec * 1000)
+      : new Date();
   const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, '');
   const date = amzDate.slice(0, 8);
   const credentialScope = `${date}/${region}/s3/aws4_request`;
