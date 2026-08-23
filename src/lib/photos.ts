@@ -101,11 +101,28 @@ export async function fetchPhotos(): Promise<Photo[]> {
   );
 }
 
+export const photosQueryOptions = {
+  queryKey: ["photos"] as const,
+  queryFn: fetchPhotos,
+  staleTime: 10 * 60 * 1000,
+  gcTime: 60 * 60 * 1000,
+  refetchOnWindowFocus: false,
+  refetchOnMount: false,
+};
+
 export function usePhotos() {
-  return useQuery({
-    queryKey: ["photos"],
-    queryFn: fetchPhotos,
-  });
+  return useQuery(photosQueryOptions);
+}
+
+/** Warm the browser cache for a list of image URLs. */
+export function preloadImages(urls: string[]) {
+  if (typeof window === "undefined") return;
+  for (const url of urls) {
+    if (!url) continue;
+    const img = new Image();
+    img.decoding = "async";
+    img.src = url;
+  }
 }
 
 export async function fetchAlbums(): Promise<Album[]> {
@@ -119,7 +136,14 @@ export async function fetchAlbums(): Promise<Album[]> {
 }
 
 export function useAlbums() {
-  return useQuery({ queryKey: ["albums"], queryFn: fetchAlbums });
+  return useQuery({
+    queryKey: ["albums"],
+    queryFn: fetchAlbums,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
 }
 
 export function useHeroImages() {
