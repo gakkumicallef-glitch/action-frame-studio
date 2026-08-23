@@ -37,7 +37,10 @@ export const signPhotoUrls = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const { presignR2 } = await import('./r2.server');
     const entries = await Promise.all(
-      data.keys.map(async (key) => [key, await presignR2('GET', key, 60 * 60 * 6)] as const),
+      // 24h validity, timestamp aligned to the hour so the URL is stable and cacheable.
+      data.keys.map(
+        async (key) => [key, await presignR2('GET', key, 60 * 60 * 24, 3600)] as const,
+      ),
     );
     return Object.fromEntries(entries) as Record<string, string>;
   });
