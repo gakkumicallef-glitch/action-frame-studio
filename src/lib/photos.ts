@@ -2,14 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { signPhotoUrls } from "@/lib/r2.functions";
 
-import a1 from "@/assets/shot-13-16-40.jpg.asset.json";
-import a2 from "@/assets/shot-13-16-41.jpg.asset.json";
-import a3 from "@/assets/shot-13-17-17.jpg.asset.json";
-import a4 from "@/assets/shot-13-17-22.jpg.asset.json";
-import a5 from "@/assets/shot-13-17-22_1.jpg.asset.json";
-import a6 from "@/assets/shot-13-17-23.jpg.asset.json";
-import a7 from "@/assets/shot-13-17-23_1.jpg.asset.json";
-import a8 from "@/assets/shot-13-17-30.jpg.asset.json";
+import a1 from "@/assets/shot-13-16-40.jpg";
+import a2 from "@/assets/shot-13-16-41.jpg";
+import a3 from "@/assets/shot-13-17-17.jpg";
+import a4 from "@/assets/shot-13-17-22.jpg";
+import a5 from "@/assets/shot-13-17-22_1.jpg";
+import a6 from "@/assets/shot-13-17-23.jpg";
+import a7 from "@/assets/shot-13-17-23_1.jpg";
+import a8 from "@/assets/shot-13-17-30.jpg";
 
 export const CATEGORIES = [
   "Football",
@@ -57,17 +57,17 @@ const seed = (
 });
 
 export const DEFAULT_PHOTOS: Photo[] = [
-  seed("d1", a3.url, "Breakaway", ["duel", "sprint"], 0),
-  seed("d2", a2.url, "Counter Attack", ["team", "pace"], 1),
-  seed("d3", a8.url, "Shoulder to Shoulder", ["duel"], 2),
-  seed("d4", a6.url, "Eyes on the Ball", ["control"], 3),
-  seed("d5", a1.url, "Number Seven", ["captain"], 4),
-  seed("d6", a5.url, "Reset", ["midfield"], 5),
-  seed("d7", a4.url, "The Walk Back", ["portrait"], 6),
-  seed("d8", a7.url, "Alone in the Box", ["wide"], 7),
+  seed("d1", a3, "Breakaway", ["duel", "sprint"], 0),
+  seed("d2", a2, "Counter Attack", ["team", "pace"], 1),
+  seed("d3", a8, "Shoulder to Shoulder", ["duel"], 2),
+  seed("d4", a6, "Eyes on the Ball", ["control"], 3),
+  seed("d5", a1, "Number Seven", ["captain"], 4),
+  seed("d6", a5, "Reset", ["midfield"], 5),
+  seed("d7", a4, "The Walk Back", ["portrait"], 6),
+  seed("d8", a7, "Alone in the Box", ["wide"], 7),
 ];
 
-export const HERO_IMAGES = [a3.url, a2.url, a8.url, a6.url, a1.url];
+export const HERO_IMAGES = [a3, a2, a8, a6, a1];
 
 const SELECT =
   "id, title, category, tags, image_url, storage_path, sort_order, album_id, is_hero";
