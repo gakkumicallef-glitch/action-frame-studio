@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { useHeroImages } from "@/lib/photos";
-import banner from "@/assets/mvassallo-banner.jpg.asset.json";
+import banner from "@/assets/mvassallo-banner.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -102,7 +102,7 @@ function Index() {
 
       <section className="border-y border-border/40">
         <img
-          src={banner.url}
+          src={banner}
           alt="Mvassallophotography — collage of matchday football photographs"
           loading="lazy"
           className="w-full object-cover"
