@@ -166,8 +166,9 @@ function Portfolio() {
                     <img
                       src={photo.image_url}
                       alt={`${photo.category} sports photograph`}
-                      loading="lazy"
+                      loading={i < 6 ? "eager" : "lazy"}
                       decoding="async"
+                      {...(i < 3 ? { fetchPriority: "high" as const } : {})}
                       className="w-full transition-transform duration-700 group-hover:scale-105"
                     />
                   </button>
