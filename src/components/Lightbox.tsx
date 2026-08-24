@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
-import type { Photo } from "@/lib/photos";
+import { preloadImages, type Photo } from "@/lib/photos";
 
 type Props = {
   photos: Photo[];

@@ -110,8 +110,9 @@ function Portfolio() {
                     <img
                       src={a.cover}
                       alt={a.name}
-                      loading="lazy"
+                      loading="eager"
                       decoding="async"
+                      fetchPriority="high"
                       className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                   ) : null}
