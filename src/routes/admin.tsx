@@ -46,11 +46,11 @@ function Admin() {
       setIsAdmin(false);
       return;
     }
-    supabase
-      .rpc("has_role", { _user_id: userId, _role: "admin" })
-      .then(({ data }) => {
-        if (active) setIsAdmin(data === true);
-      });
+    import("@/lib/admin-check").then(({ isAdminUser }) =>
+      isAdminUser(supabase, userId).then((ok) => {
+        if (active) setIsAdmin(ok);
+      }),
+    );
     return () => {
       active = false;
     };
