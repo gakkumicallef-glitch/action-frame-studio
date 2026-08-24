@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react";
 
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
-import { useHeroImages } from "@/lib/photos";
+import { preloadImages, useHeroImages } from "@/lib/photos";
 import banner from "@/assets/mvassallo-banner.jpg";
 
 export const Route = createFileRoute("/")({
@@ -32,7 +32,8 @@ function Index() {
 
   useEffect(() => {
     setSlide(0);
-  }, [images.length]);
+    preloadImages(images);
+  }, [images]);
 
   useEffect(() => {
     const t = setInterval(() => setSlide((s) => (s + 1) % images.length), 5200);
