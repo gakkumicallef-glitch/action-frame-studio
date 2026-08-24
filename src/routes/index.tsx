@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react";
 
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
-import { useHeroImages } from "@/lib/photos";
+import { preloadImages, useHeroImages } from "@/lib/photos";
 import banner from "@/assets/mvassallo-banner.jpg";
 
 export const Route = createFileRoute("/")({
@@ -29,10 +29,12 @@ export const Route = createFileRoute("/")({
 function Index() {
   const { images } = useHeroImages();
   const [slide, setSlide] = useState(0);
+  const imagesKey = images.join("|");
 
   useEffect(() => {
     setSlide(0);
-  }, [images.length]);
+    preloadImages(imagesKey.split("|"));
+  }, [imagesKey]);
 
   useEffect(() => {
     const t = setInterval(() => setSlide((s) => (s + 1) % images.length), 5200);
@@ -55,7 +57,9 @@ function Index() {
               src={src}
               alt=""
               aria-hidden="true"
-              loading={i === 0 ? "eager" : "lazy"}
+              loading="eager"
+              decoding="async"
+              {...(i === 0 ? { fetchPriority: "high" as const } : {})}
               className={`h-full w-full object-cover ${i === slide ? "animate-kenburns" : ""}`}
             />
           </div>

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
-import type { Photo } from "@/lib/photos";
+import { preloadImages, type Photo } from "@/lib/photos";
 
 type Props = {
   photos: Photo[];
@@ -25,6 +25,15 @@ export function Lightbox({ photos, index, onClose, onIndexChange }: Props) {
       document.body.style.overflow = "";
     };
   }, [index, photos.length, onClose, onIndexChange]);
+
+  useEffect(() => {
+    const n = photos.length;
+    if (n < 2) return;
+    preloadImages([
+      photos[(index + 1) % n]?.image_url ?? "",
+      photos[(index - 1 + n) % n]?.image_url ?? "",
+    ]);
+  }, [index, photos]);
 
   if (!photo) return null;
 
@@ -52,6 +61,8 @@ export function Lightbox({ photos, index, onClose, onIndexChange }: Props) {
         <img
           src={photo.image_url}
           alt={`${photo.category} sports photograph`}
+          decoding="async"
+          fetchPriority="high"
           className="max-h-full max-w-full object-contain"
         />
         <button
