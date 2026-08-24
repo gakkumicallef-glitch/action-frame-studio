@@ -29,11 +29,12 @@ export const Route = createFileRoute("/")({
 function Index() {
   const { images } = useHeroImages();
   const [slide, setSlide] = useState(0);
+  const imagesKey = images.join("|");
 
   useEffect(() => {
     setSlide(0);
-    preloadImages(images);
-  }, [images]);
+    preloadImages(imagesKey.split("|"));
+  }, [imagesKey]);
 
   useEffect(() => {
     const t = setInterval(() => setSlide((s) => (s + 1) % images.length), 5200);
