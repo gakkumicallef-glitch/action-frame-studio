@@ -464,8 +464,43 @@ function Manager() {
         />
       </div>
 
+      <section className="mt-12 border border-border bg-card p-5">
+        <h2 className="text-[0.7rem] uppercase tracking-[0.3em] text-muted-foreground">
+          Front page slideshow — {heroCount} selected
+        </h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Tap a photo to add or remove it from the home page slider.
+        </p>
+        <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-8">
+          {photos.map((photo) => (
+            <button
+              key={photo.id}
+              onClick={() => update(photo.id, { is_hero: !photo.is_hero })}
+              aria-pressed={photo.is_hero}
+              className={`relative aspect-square overflow-hidden border transition-colors ${
+                photo.is_hero ? "border-primary" : "border-border opacity-60 hover:opacity-100"
+              }`}
+            >
+              <img
+                src={photo.image_url}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                className="h-full w-full object-cover"
+              />
+              {photo.is_hero && (
+                <Star className="absolute right-1 top-1 h-4 w-4 fill-current text-primary" />
+              )}
+            </button>
+          ))}
+        </div>
+        {photos.length === 0 && (
+          <p className="mt-4 text-sm text-muted-foreground">Upload photos first.</p>
+        )}
+      </section>
+
       <h2 className="mt-12 text-[0.7rem] uppercase tracking-[0.3em] text-muted-foreground">
-        Photos — {heroCount} on the front page slideshow
+        Photos
       </h2>
 
       <div className="mt-4 grid gap-3">
