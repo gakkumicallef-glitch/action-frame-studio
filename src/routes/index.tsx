@@ -57,7 +57,9 @@ function Index() {
               src={src}
               alt=""
               aria-hidden="true"
-              loading={i === 0 ? "eager" : "lazy"}
+              loading="eager"
+              decoding="async"
+              {...(i === 0 ? { fetchPriority: "high" as const } : {})}
               className={`h-full w-full object-cover ${i === slide ? "animate-kenburns" : ""}`}
             />
           </div>
