@@ -34,11 +34,9 @@ export const Route = createFileRoute('/api/r2-upload')({
         const userId = claims?.claims?.sub;
         if (!userId) return new Response('Unauthorized', { status: 401 });
 
-        const { data: isAdmin } = await supabase.rpc('has_role', {
-          _user_id: userId,
-          _role: 'admin',
-        });
-        if (!isAdmin) return new Response('Forbidden', { status: 403 });
+        const { isAdminUser } = await import('@/lib/admin-check');
+        if (!(await isAdminUser(supabase, userId))) return new Response('Forbidden', { status: 403 });
+
 
         const body = await request.arrayBuffer();
         if (body.byteLength > 2_000_000) return new Response('File too large', { status: 413 });

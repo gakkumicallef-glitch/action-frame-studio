@@ -48,11 +48,9 @@ export const deletePhotoObject = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ key: z.string().min(1) }).parse(input))
   .handler(async ({ data, context }) => {
-    const { data: isAdmin, error } = await context.supabase.rpc('has_role', {
-      _user_id: context.userId,
-      _role: 'admin',
-    });
-    if (error || !isAdmin) throw new Error('Forbidden');
+    const { isAdminUser } = await import('./admin-check');
+    if (!(await isAdminUser(context.supabase, context.userId))) throw new Error('Forbidden');
+
     const { presignR2 } = await import('./r2.server');
     const url = await presignR2('DELETE', data.key, 300);
     const res = await fetch(url, { method: 'DELETE' });
