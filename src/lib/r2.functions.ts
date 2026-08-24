@@ -15,11 +15,9 @@ export const presignPhotoUpload = createServerFn({ method: 'POST' })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { data: isAdmin, error } = await context.supabase.rpc('has_role', {
-      _user_id: context.userId,
-      _role: 'admin',
-    });
-    if (error || !isAdmin) throw new Error('Forbidden');
+    const { isAdminUser } = await import('./admin-check');
+    if (!(await isAdminUser(context.supabase, context.userId))) throw new Error('Forbidden');
+
     if (!data.contentType.startsWith('image/')) throw new Error('Only images can be uploaded');
 
     const { presignR2, ensureR2Cors } = await import('./r2.server');
