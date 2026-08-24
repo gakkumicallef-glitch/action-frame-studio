@@ -50,7 +50,7 @@ export function Lightbox({ photos, index, onClose, onIndexChange }: Props) {
         wheel={{ step: 0.12 }}
         pinch={{ step: 5 }}
         limitToBounds
-        onTransformed={(_, state) => setZoomed(state.scale > 1.01)}
+        onTransform={(ref) => setZoomed(ref.state.scale > 1.01)}
       >
         {({ zoomIn, zoomOut, resetTransform }) => (
           <>
