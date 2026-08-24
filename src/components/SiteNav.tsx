@@ -6,7 +6,7 @@ import logo from "@/assets/mvassallo-logo.png";
 const links = [
   { to: "/", label: "Home" },
   { to: "/portfolio", label: "Portfolio" },
-  { to: "/about", label: "About" },
+  
   { to: "/contact", label: "Contact" },
 ] as const;
 

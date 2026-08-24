@@ -1,5 +1,5 @@
 export const CONTACT = {
-  email: "masonthebestmason@gmail.com",
+  email: "Mvassallophotagraphy@gmail.com",
   phoneDisplay: "7940 1279",
   phoneIntl: "+35679401279",
   whatsapp: "35679401279",
